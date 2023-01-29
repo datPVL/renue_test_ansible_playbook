@@ -1,0 +1,67 @@
+---
+- block:
+  
+  - name: Create the database specified in vars
+    become: true
+    become_user: postgres
+    postgresql_db: name='{{ item }}'
+      template='template0'
+      state=present
+    loop: "{{ dblist }}"
+
+  - name: Ensure user has access to the db myapp
+    become: true
+    become_user: postgres
+    postgresql_user: db=myapp
+      name={{ db_user }}
+      password={{ db_password }}
+      postgresql_privs='SELECT','INSERT','UPDATE'
+      state=present
+
+  - name: Ensure user has access to the db myauth
+    become: true
+    become_user: postgres
+    postgresql_user: db=myauth
+      name={{ db_user }}
+      password={{ db_password }}
+      postgresql_privs='SELECT'
+      state=present
+
+  - name: Ensure user does not have unnecessary permissions
+    become: true
+    become_user: postgres
+    postgresql_user: name={{ db_user }}
+      role_attr_flags=NOSUPERUSER,NOCREATEDB
+      state=present
+  
+  - name: Creating a file with content
+    copy:
+      dest: "/tmp/dump.sql"
+      content: |
+        CREATE TABLE IF NOT EXISTS test (           
+        message varchar(255) NOT NULL         
+        );          
+        INSERT INTO test(message) VALUES('Ansible is fun');
+        ALTER TABLE test OWNER TO "dbusername";
+
+  - name: Allow postgres user to use created file
+    ansible.builtin.file:
+      path: "/tmp/dump.sql"
+      owner: "postgres"
+      group: "postgres"
+      mode: '0777'
+
+  - name: Add some dummy data to databases
+    become: true
+    become_user: postgres
+    shell: psql '{{ item }}' < /tmp/dump.sql
+    loop: "{{ dblist }}"
+
+  - name: Grant user developer connection from nodeC with password
+    postgresql_pg_hba:
+      dest: /var/lib/postgres/data/pg_hba.conf
+      contype: host
+      users: developer
+      source: 172.22.0.15/32
+      databases: myapp, myauth
+      method: password

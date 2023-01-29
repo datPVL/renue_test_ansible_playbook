@@ -1,0 +1,37 @@
+---
+- block:
+    
+  - name: Create user DevOps
+    become: true
+    ansible.builtin.user:
+      name: DevOps
+      shell: /bin/bash
+      create_home: yes
+      groups: devops,sudo
+      append: yes
+
+  - name: Allow devops group to have passwordless sudo
+    become: true
+    lineinfile:
+      dest: /etc/sudoers
+      state: present
+      regexp: '^%devops'
+      line: '%devops ALL=(ALL:ALL) NOPASSWD:ALL'
+      validate: 'visudo -cf %s'
+
+  - name: Set up multiple authorized keys
+    become: true
+    authorized_key:
+      user: '{{ item }}'
+      state: present
+      key: "{{ lookup('file', 'files/{{ item }}/id_rsa.pub') }}"
+    loop: "{{ users }}"
+
+  - name: Disallow SSH password authentication
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^PasswordAuthentication"
+      line="PasswordAuthentication no"
+      state=present
+    notify:
+      - restart sshd

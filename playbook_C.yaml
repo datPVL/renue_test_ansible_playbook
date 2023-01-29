@@ -1,0 +1,7 @@
+---
+- name: playbookC
+  gather_facts: true
+  become: true
+  hosts: nodeC
+  roles:
+    - roleC

@@ -1,0 +1,6 @@
+db_user: developer
+db_password: dbpassword
+
+dblist:
+  - myapp
+  - myauth

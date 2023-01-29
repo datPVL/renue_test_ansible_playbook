@@ -1,0 +1,14 @@
+---
+- block:
+
+  - name: create User and disable SSH password auth
+    import_taks: sshConfiguration.yaml
+
+  - name: Install PostgreSQL
+    import_tasks: installPostgreSQL.yaml
+
+  - name: Create DB and User in Postgres
+    import_tasks: configPostgreSQL.yaml
+
+  - name: Disable SSH connection from nodeC
+    import_tasks: configIptables.yaml

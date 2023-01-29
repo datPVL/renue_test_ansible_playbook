@@ -1,0 +1,22 @@
+---
+- block:
+
+  - name: Allow SSH Connection from nodeA
+    ansible.builtin.iptables:
+    chain: INPUT
+    source: 192.168.0.5
+    protocol: tcp
+    destination_ports:
+      - "22"
+    jump: ACCEPT
+    become: true
+
+  - name: Disallow SSH Connection from any other node
+    ansible.builtin.iptables:
+    chain: INPUT
+    source: 0.0.0.0
+    protocol: tcp
+    destination_ports:
+      - "22"
+    jump: DROP
+    become: true

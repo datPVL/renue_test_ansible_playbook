@@ -1,0 +1,11 @@
+# Append this list to make playbook add all new pubkeys
+users:
+  - userA
+  - userC
+
+db_user: developer
+db_password: dbpassword
+
+dblist:
+  - myapp
+  - myauth
